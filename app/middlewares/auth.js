@@ -14,10 +14,10 @@ const WithAuth = (req, res, next) => {
         res.status(401).json({error: 'Unautorized: token invalid!'})
       else {
         req.email = decoded.email;
-        console.log(user);
-        User.findOne({email: decoded.mail})
+        User.findOne({email: decoded.email})
         .then(user => {
           req.user = user;
+          console.log(user);
           next();
         })
         .catch(err => {
