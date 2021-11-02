@@ -26,11 +26,56 @@ router.get('/:id', withAuth, async (req, res) => {
     else
       res.status(403).json({error: 'Permission denied.'});
   } catch (error) {
-    res.status(500).json({error: 'Problem to retrieve the note note.'});
+    res.status(500).json({error: 'Problem to retrieve the note.'});
   }
 })
 
-const isOwner =(user, note) => {
+router.get('/', withAuth, async (req, res) => {
+  try {
+    let notes = await Note.find({author: req.user._id});
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({error: 'Problem to retrieve the notes.'});
+  }
+})
+
+router.put('/:id', withAuth, async(req, res) => {
+  const { title, body} = req.body;
+  const { id } = req.params;
+
+  try {
+    let note = await Note.findById(id);
+    if(isOwner(req.user, note)){
+      let note = await Note.findOneAndUpdate(id, 
+        { $set: { title: title, body: body} },
+        { upsert: true, 'new': true}
+        );
+
+      res.json(note);
+    } else
+      res.status(403).json({error: 'Permission denied.'});
+  } catch (error) {
+    res.status(500).json({error: 'Problem to edit note.'});
+  }
+})
+
+router.delete('/:id', withAuth, async(req, res) => {
+  const { id } = req.params;
+
+  try {
+    let note = await Note.findById(id);
+    if(isOwner(req.user, note)){
+      await note.delete();
+      res.json({Messsge: 'OK'}).status(204);
+    }
+    else
+    res.json({error: 'Forbidden'}).status(403);
+  } catch (error) {
+    res.status(500).json({error: 'Problem to delete note.'});
+  }
+})
+
+const isOwner = (user, note) => {
   if(JSON.stringify(user._id) == JSON.stringify(note.author._id))
     return true;
   else
