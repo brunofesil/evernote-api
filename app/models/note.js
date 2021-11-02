@@ -10,4 +10,6 @@ let noteSchema = new mongoose.Schema ({
   }
 }, { timestamps: { createdAt: 'created_at' } });
 
+noteSchema.index({'title': 'text', 'body': 'text'});
+
 module.exports = mongoose.model('Note', noteSchema);
